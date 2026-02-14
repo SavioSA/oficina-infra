@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres:15
     container_name: oficina_postgres
+    restart: always
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
@@ -11,13 +12,36 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: oficina_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
   api:
     build: ../oficina-api
+    container_name: oficina_api
+    restart: always
     ports:
       - "3000:3000"
     volumes:
       - ../oficina-api:/app
       - /app/node_modules
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: admin
+      DB_PASSWORD: admin
+      DB_NAME: oficina
+      JWT_SECRET: supersecret
+    depends_on:
+      - postgres
     command: npm run start:dev
 
   web:
